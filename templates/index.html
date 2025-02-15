@@ -185,7 +185,7 @@
                 currentDeviceId = deviceId; // Update deviceId yang aktif
 
                 const constraints = {
-                    video: {}, // Biarkan kosong dulu, akan diisi di bawah
+                    video: { facingMode: "environment" }, // Biarkan kosong dulu, akan diisi di bawah
                     audio: false
                 };
 
