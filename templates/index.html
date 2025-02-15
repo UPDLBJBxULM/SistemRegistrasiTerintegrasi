@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrasi Kendaraan Masuk</title>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        /* Gaya CSS tambahan jika diperlukan */
+        #cameraPreview {
+            aspect-ratio: 16 / 9;
+            max-height: 300px;
+            /* Batas ketinggian maksimum untuk preview kamera */
+        }
+
+        /* Styling untuk indikator loading */
+        .loader {
+            border: 4px solid #f3f3f3;
+            /* Light grey */
+            border-top: 4px solid #3498db;
+            /* Blue */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 2s linear infinite;
+            display: none;
+            /* Sembunyikan secara default */
+            margin: 0 auto;
+            /* Pusatkan */
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-sans">
+    <div class="container mx-auto p-6 md:p-8 bg-white shadow-md rounded-xl">
+        <header class="mb-8 p-6 rounded-xl bg-indigo-700 text-white shadow-sm">
+            <h1 class="text-2xl md:text-3xl font-bold text-center">
+                Sistem Keamanan Terintegrasi <br> PLN UPDL Banjarbaru
+            </h1>
+            <p class="mt-1 text-center text-gray-200 italic text-sm">Registrasi Kendaraan Masuk Otomatis</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <section class="shadow-md rounded-xl overflow-hidden bg-gray-50 border border-gray-200">
+                <div class="p-4">
+                    <video id="cameraPreview" class="w-full h-auto rounded-md border border-gray-200" autoplay></video>
+                </div>
+                <div class="px-4 pb-6 flex justify-center">
+                    <button id="captureButton"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-2" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.624A2 2 0 0110.93 3H13.07a2 2 0 011.664.89l.812 1.624A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Ambil Foto
+                    </button>
+                </div>
+                <div class="loader" id="captureLoader"></div>
+            </section>
+
+            <form class="space-y-6">
+                <div class="bg-gray-50 shadow-sm rounded-xl border border-gray-200">
+                    <div class="p-4">
+                        <label for="plateNumber" class="block text-gray-800 font-semibold mb-2 text-sm">
+                            Plat Nomor (Otomatis):
+                        </label>
+                        <input type="text" id="plateNumber"
+                            class="shadow-inner appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 border-gray-200 text-sm"
+                            placeholder="Plat nomor akan terdeteksi otomatis setelah mengambil foto">
+                    </div>
+                </div>
+                <div class="bg-gray-50 shadow-sm rounded-xl border border-gray-200">
+                    <div class="p-4">
+                        <label for="vehicleType" class="block text-gray-800 font-semibold mb-2 text-sm">
+                            Jenis Kendaraan (Opsional):
+                        </label>
+                        <select id="vehicleType"
+                            class="shadow-inner appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 border-gray-200 text-sm">
+                            <option value="" selected>Pilih Jenis Kendaraan</option>
+                            <option value="mobil">Mobil</option>
+                            <option value="motor">Motor</option>
+                            <option value="truk">Truk</option>
+                            <option value="lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 shadow-sm rounded-xl border border-gray-200">
+                    <div class="p-4">
+                        <label for="purpose" class="block text-gray-800 font-semibold mb-2 text-sm">
+                            Tujuan Kedatangan (Opsional):
+                        </label>
+                        <input type="text" id="purpose"
+                            class="shadow-inner appearance-none border rounded-md w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 border-gray-200 text-sm"
+                            placeholder="Masukkan tujuan kedatangan Anda">
+                    </div>
+                </div>
+
+                <div class="flex justify-center mt-4">
+                    <button id="registerButton" type='button'
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-2" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                        Kirim
+                    </button>
+
+                </div>
+                <div class="loader" id="registerLoader"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cameraPreview = document.getElementById('cameraPreview');
+            const captureButton = document.getElementById('captureButton');
+            const plateNumberInput = document.getElementById('plateNumber');
+            const vehicleTypeSelect = document.getElementById('vehicleType');
+            const purposeInput = document.getElementById('purpose');
+            const registerButton = document.getElementById('registerButton');
+            const canvas = document.createElement('canvas');
+            const captureLoader = document.getElementById('captureLoader');
+            const registerLoader = document.getElementById('registerLoader');
+
+            const imageUrlInput = document.createElement('input');
+            imageUrlInput.type = 'hidden';
+            imageUrlInput.id = 'imageUrl';
+            document.querySelector('form').appendChild(imageUrlInput);
+
+            let stream = null;
+
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    cameraPreview.srcObject = stream;
+                    console.log('Kamera berhasil diakses.');
+                } catch (error) {
+                    console.error('Error accessing camera:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Mengakses Kamera',
+                        text: 'Pastikan kamera web diizinkan dan berfungsi.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }
+
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    cameraPreview.srcObject = null;
+                    console.log('Kamera dihentikan.');
+                }
+            }
+
+            async function capturePhotoAndExtractPlate() {
+                console.log('Tombol ambil foto ditekan');
+                if (!stream) {
+                    await startCamera();
+                }
+
+                captureLoader.style.display = 'block';
+                captureButton.disabled = true;
+
+                const captureImage = () => {
+                    const context = canvas.getContext('2d');
+                    canvas.width = 1280;
+                    canvas.height = 960;
+                    context.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+                    const photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    const imageData = photoDataUrl.split(',')[1];
+                    // Lakukan fetch ke server seperti biasa
+                    fetch('/extract_plate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `image=${encodeURIComponent(imageData)}`
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.plateNumber) {
+                                plateNumberInput.value = data.plateNumber;
+                            }
+                            if (data.imageUrl) {
+                                imageUrlInput.value = data.imageUrl;
+                            }
+                            if (data.error) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Ekstraksi Plat Nomor Gagal',
+                                    text: data.error || 'Terjadi kesalahan saat mengekstrak plat nomor.',
+                                    confirmButtonText: 'Coba Lagi'
+                                });
+                            } else if (data.warning) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Peringatan',
+                                    text: data.warning,
+                                    confirmButtonText: 'OK'
+                                });
+                            } else if (!data.plateNumber && !data.error && !data.warning) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Response Tidak Valid',
+                                    text: 'Response dari server tidak sesuai format atau plat nomor tidak ditemukan dan gambar gagal diupload.',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Kesalahan',
+                                text: `Terjadi kesalahan: ${error.message}`,
+                                confirmButtonText: 'OK'
+                            });
+                        })
+                        .finally(() => {
+                            captureLoader.style.display = 'none';
+                            captureButton.disabled = false;
+                        });
+                };
+
+                // Jika video sudah siap, langsung panggil captureImage
+                if (cameraPreview.readyState >= 2) { // HAVE_CURRENT_DATA atau HAVE_ENOUGH_DATA
+                    captureImage();
+                } else {
+                    cameraPreview.addEventListener('canplay', captureImage, { once: true });
+                }
+            }
+
+            captureButton.addEventListener('click', async () => {
+                console.log('Tombol Ambil Foto Ditekan');
+                await capturePhotoAndExtractPlate(); // Gunakan await di sini
+            });
+
+            registerButton.addEventListener('click', async () => {
+                const plateNumber = plateNumberInput.value;
+                const vehicleType = vehicleTypeSelect.value;
+                const purpose = purposeInput.value;
+                const imageUrl = imageUrlInput.value;
+
+                if (!plateNumber) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Plat Nomor Kosong',
+                        text: 'Plat Nomor wajib diisi!',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                registerLoader.style.display = 'block';
+                registerButton.disabled = true;
+
+                try {
+                    const response = await fetch('/register_vehicle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `plateNumber=${encodeURIComponent(plateNumber)}&vehicleType=${encodeURIComponent(vehicleType)}&purpose=${encodeURIComponent(purpose)}&imageUrl=${encodeURIComponent(imageUrl)}`
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Registrasi Berhasil!',
+                            text: data.message || 'Kendaraan berhasil diregistrasi.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        // Reset form
+                        plateNumberInput.value = '';
+                        vehicleTypeSelect.value = '';
+                        purposeInput.value = '';
+                        imageUrlInput.value = '';
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Registrasi Gagal',
+                            text: data.message || 'Terjadi kesalahan saat registrasi kendaraan. Silakan coba lagi.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kesalahan',
+                        text: `Terjadi kesalahan: ${error.message}`,
+                        confirmButtonText: 'OK'
+                    });
+
+                } finally {
+                    registerLoader.style.display = 'none';
+                    registerButton.disabled = false;
+                }
+            });
+
+            // Panggil startCamera() di dalam DOMContentLoaded, TAPI di luar event listener lain
+            startCamera();
+            window.addEventListener('beforeunload', stopCamera); // Tetap di sini
+        });
+    </script>
+
+</body>
+
+</html>

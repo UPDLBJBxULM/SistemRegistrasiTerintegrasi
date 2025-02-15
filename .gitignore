@@ -1,0 +1,23 @@
+# File Kredensial
+credentials/service_account_key.json
+credentials/service_account.json # Jika nama filenya service_account.json
+
+# Virtual Environment
+srm_env/
+
+# Folder Upload Sementara
+tmp/uploads/
+
+# File Environment Variables
+.env
+
+# Python bytecode (optional, tapi umum diabaikan)
+__pycache__/
+*.pyc
+*.pyo
+
+# Log files (optional, tergantung kebutuhan proyek)
+*.log
+
+# Folder "instance" Flask (optional, jika Anda menggunakannya dan tidak ingin di-track)
+instance/

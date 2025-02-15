@@ -1,0 +1,1 @@
+pip install flask google-generativeai pillow google-auth google-auth-oauthlib gspread google-api-python-client python-dotenv
