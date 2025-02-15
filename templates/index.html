@@ -56,6 +56,18 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <section class="shadow-md rounded-xl overflow-hidden bg-gray-50 border border-gray-200">
+                <div class="p-4 flex justify-between items-center"> <!-- Flex container untuk dropdown dan video -->
+                    <div>
+                        <label for="cameraSelect" class="block text-gray-800 font-semibold mb-1 text-sm">
+                            Pilih Kamera:
+                        </label>
+                        <select id="cameraSelect"
+                            class="shadow-inner appearance-none border rounded-md py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 border-gray-200 text-sm">
+                            <option value="" selected>Otomatis (Default)</option>
+                            <!-- Opsi kamera akan ditambahkan oleh JavaScript -->
+                        </select>
+                    </div>
+                </div>
                 <div class="p-4">
                     <video id="cameraPreview" class="w-full h-auto rounded-md border border-gray-200" autoplay></video>
                 </div>
@@ -140,6 +152,7 @@
             const canvas = document.createElement('canvas');
             const captureLoader = document.getElementById('captureLoader');
             const registerLoader = document.getElementById('registerLoader');
+            const cameraSelect = document.getElementById('cameraSelect'); // Dapatkan elemen dropdown kamera
 
             const imageUrlInput = document.createElement('input');
             imageUrlInput.type = 'hidden';
@@ -147,18 +160,49 @@
             document.querySelector('form').appendChild(imageUrlInput);
 
             let stream = null;
+            let currentDeviceId = null; // Menyimpan deviceId kamera yang sedang aktif
 
-            async function startCamera() {
+            async function populateCameraDropdown() {
                 try {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    cameraSelect.innerHTML = '<option value="">Otomatis (Default)</option>'; // Reset dan tambahkan opsi default lagi
+                    devices.forEach(device => {
+                        if (device.kind === 'videoinput') {
+                            const option = document.createElement('option');
+                            option.value = device.deviceId;
+                            option.text = device.label || `Kamera ${cameraSelect.options.length}`; // Label atau nama generik
+                            cameraSelect.appendChild(option);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error enumerating devices:', error);
+                    // Handle error jika gagal enumerate devices, mungkin tampilkan pesan ke user
+                }
+            }
+
+            async function startCamera(deviceId) {
+                stopCamera(); // Pastikan kamera sebelumnya dihentikan dulu
+                currentDeviceId = deviceId; // Update deviceId yang aktif
+
+                const constraints = {
+                    video: {}, // Biarkan kosong dulu, akan diisi di bawah
+                    audio: false
+                };
+
+                if (deviceId) {
+                    constraints.video.deviceId = { exact: deviceId }; // Gunakan deviceId spesifik jika dipilih
+                }
+
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
                     cameraPreview.srcObject = stream;
-                    console.log('Kamera berhasil diakses.');
+                    console.log(`Kamera ${deviceId ? deviceId : 'default'} berhasil diakses.`);
                 } catch (error) {
                     console.error('Error accessing camera:', error);
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal Mengakses Kamera',
-                        text: 'Pastikan kamera web diizinkan dan berfungsi.',
+                        text: 'Pastikan kamera web diizinkan dan berfungsi, atau coba pilih kamera lain dari dropdown.',
                         confirmButtonText: 'OK'
                     });
                 }
@@ -168,14 +212,15 @@
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
                     cameraPreview.srcObject = null;
-                    console.log('Kamera dihentikan.');
+                    stream = null;
+                    currentDeviceId = null; // Reset deviceId yang aktif
                 }
             }
 
             async function capturePhotoAndExtractPlate() {
                 console.log('Tombol ambil foto ditekan');
                 if (!stream) {
-                    await startCamera();
+                    await startCamera(cameraSelect.value); // Mulai kamera jika belum aktif
                 }
 
                 captureLoader.style.display = 'block';
@@ -330,8 +375,16 @@
                 }
             });
 
-            // Panggil startCamera() di dalam DOMContentLoaded, TAPI di luar event listener lain
-            startCamera();
+            cameraSelect.addEventListener('change', function () {
+                const selectedDeviceId = this.value;
+                startCamera(selectedDeviceId); // Start camera dengan deviceId yang dipilih
+            });
+
+            // Panggil fungsi untuk populate dropdown dan start kamera awal
+            populateCameraDropdown().then(() => {
+                startCamera(); // Start kamera default setelah dropdown diisi
+            });
+
             window.addEventListener('beforeunload', stopCamera); // Tetap di sini
         });
     </script>
